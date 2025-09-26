@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cash A/C</title>
+    <!-- Tailwind CSS for mobile-first styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            /* Disable text selection */
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        #records-container::-webkit-scrollbar {
+            display: none;
+        }
+        /* Hide scrollbar for IE, Edge and Firefox */
+        #records-container {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+</head>
+<body class="bg-black text-white flex flex-col items-center min-h-screen p-4">
+
+    <!-- Settings Button -->
+    <button id="settings-btn" class="absolute top-4 right-4 text-2xl text-gray-400 hover:text-white transition-colors duration-200 focus:outline-none z-50">
+        ⚙️
+    </button>
+
+    <!-- Main Container -->
+    <div class="w-full max-w-sm flex flex-col gap-6 p-4">
+
+        <!-- Title -->
+        <h1 class="text-3xl font-bold text-center text-green-400 drop-shadow-sm">Cash A/C</h1>
+        
+        <!-- Amount Input Field -->
+        <div class="flex flex-col gap-2">
+            <label for="amount-input" class="text-sm text-gray-400 font-medium">Enter Amount</label>
+            <input type="number" id="amount-input" class="w-full p-4 text-white text-3xl font-bold text-center bg-gray-800 border-2 border-gray-700 rounded-xl focus:outline-none focus:border-green-400 transition-all duration-200" placeholder="0">
+        </div>
+
+        <!-- Debit & Credit Buttons -->
+        <div class="flex justify-between gap-4">
+            <button id="debit-btn" class="flex-1 py-4 text-center font-bold text-lg rounded-xl transition-all duration-300 border-2">
+                Debit (+)
+            </button>
+            <button id="credit-btn" class="flex-1 py-4 text-center font-bold text-lg rounded-xl transition-all duration-300 border-2">
+                Credit (-)
+            </button>
+        </div>
+
+        <!-- Record Button -->
+        <button id="record-btn" class="w-full py-4 bg-yellow-500 text-gray-900 font-bold text-lg rounded-xl shadow-lg hover:bg-yellow-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 focus:ring-offset-gray-900">
+            Record Transaction
+        </button>
+
+        <!-- Summary Section -->
+        <div class="flex flex-col gap-2 p-4 bg-gray-800 rounded-2xl">
+            <div class="flex justify-between text-gray-300 text-sm">
+                <span>Total Debit:</span>
+                <span id="total-debit" class="font-semibold text-green-400">₹0.00</span>
+            </div>
+            <div class="flex justify-between text-gray-300 text-sm">
+                <span>Total Credit:</span>
+                <span id="total-credit" class="font-semibold text-red-400">₹0.00</span>
+            </div>
+            <div class="h-[1px] bg-gray-700 my-2"></div>
+            <div class="flex justify-between text-lg font-bold">
+                <span>Net Balance:</span>
+                <span id="net-balance" class="text-white">₹0.00</span>
+            </div>
+        </div>
+
+        <!-- Show Records Button -->
+        <button id="show-records-btn" class="w-full py-3 bg-gray-700 text-gray-300 font-semibold text-sm rounded-xl hover:bg-gray-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-gray-900">
+            Show Transaction History
+        </button>
+
+        <!-- Transaction History Container -->
+        <div id="records-container" class="mt-4 flex flex-col gap-3 max-h-64 overflow-y-auto hidden">
+            <!-- Transaction records will be inserted here by JavaScript -->
+        </div>
+
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-40">
+        <div class="bg-gray-900 text-white p-6 rounded-2xl w-full max-w-sm shadow-xl flex flex-col gap-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xl font-bold">Settings</h2>
+                <button id="close-modal-btn" class="text-gray-400 hover:text-white transition-colors duration-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Export Section -->
+            <div class="flex flex-col gap-2">
+                <button id="export-csv-btn" class="w-full py-3 bg-indigo-600 rounded-xl font-semibold hover:bg-indigo-700 transition-colors">
+                    Export to CSV
+                </button>
+                <p class="text-gray-400 text-sm text-center">Export history for use in Google Sheets.</p>
+            </div>
+
+            <!-- Import Section -->
+            <div class="flex flex-col gap-2">
+                <p class="text-white font-semibold">Import Transactions (Paste JSON here)</p>
+                <textarea id="import-input" class="w-full h-24 p-2 text-white text-sm bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:border-green-400"></textarea>
+                <button id="import-btn" class="w-full py-3 bg-green-600 rounded-xl font-semibold hover:bg-green-700 transition-colors">
+                    Import
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Disable right-click context menu
+            document.addEventListener('contextmenu', (e) => e.preventDefault());
+
+            // Disable Ctrl/Cmd + S and F12/Ctrl+Shift+I for developers
+            document.addEventListener('keydown', (e) => {
+                // Check for Ctrl/Cmd + S
+                if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                    e.preventDefault();
+                }
+                // Check for F12 or Ctrl/Cmd + Shift + I
+                if (e.key === 'F12' || (e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'I') {
+                    e.preventDefault();
+                }
+            });
+
+            // Get references to all necessary DOM elements
+            const amountInput = document.getElementById('amount-input');
+            const debitBtn = document.getElementById('debit-btn');
+            const creditBtn = document.getElementById('credit-btn');
+            const recordBtn = document.getElementById('record-btn');
+            const showRecordsBtn = document.getElementById('show-records-btn');
+            const totalDebitSpan = document.getElementById('total-debit');
+            const totalCreditSpan = document.getElementById('total-credit');
+            const netBalanceSpan = document.getElementById('net-balance');
+            const recordsContainer = document.getElementById('records-container');
+            const settingsBtn = document.getElementById('settings-btn');
+            const settingsModal = document.getElementById('settings-modal');
+            const closeModalBtn = document.getElementById('close-modal-btn');
+            const exportCsvBtn = document.getElementById('export-csv-btn');
+            const importBtn = document.getElementById('import-btn');
+            const importInput = document.getElementById('import-input');
+
+            let selectedType = ''; // State to hold the selected transaction type
+
+            // Class definitions for button states
+            const defaultDebitClasses = ['bg-green-700', 'text-white', 'border-green-700'];
+            const defaultCreditClasses = ['bg-red-700', 'text-white', 'border-red-700'];
+            const activeClasses = ['scale-105', 'shadow-lg'];
+            const inactiveClasses = ['bg-gray-800', 'text-gray-400', 'border-gray-700'];
+
+            // Function to update the visual state of the buttons
+            const updateButtonState = () => {
+                // Reset both buttons to default state first
+                debitBtn.classList.remove(...inactiveClasses, ...activeClasses);
+                debitBtn.classList.add(...defaultDebitClasses);
+                
+                creditBtn.classList.remove(...inactiveClasses, ...activeClasses);
+                creditBtn.classList.add(...defaultCreditClasses);
+
+                // Apply active/inactive styles based on selection
+                if (selectedType === 'debit') {
+                    debitBtn.classList.add(...activeClasses);
+                    creditBtn.classList.remove(...defaultCreditClasses);
+                    creditBtn.classList.add(...inactiveClasses);
+                } else if (selectedType === 'credit') {
+                    creditBtn.classList.add(...activeClasses);
+                    debitBtn.classList.remove(...defaultDebitClasses);
+                    debitBtn.classList.add(...inactiveClasses);
+                }
+            };
+            
+            // Function to load and parse transactions from localStorage
+            const getTransactions = () => {
+                const transactionsJson = localStorage.getItem('transactions');
+                return transactionsJson ? JSON.parse(transactionsJson) : [];
+            };
+
+            // Function to save transactions to localStorage
+            const saveTransactions = (transactions) => {
+                localStorage.setItem('transactions', JSON.stringify(transactions));
+            };
+
+            // Function to update the summary display
+            const updateSummary = () => {
+                const transactions = getTransactions();
+                let totalDebit = 0;
+                let totalCredit = 0;
+
+                transactions.forEach(transaction => {
+                    const amount = parseFloat(transaction.amount);
+                    if (transaction.nature === 'debit') {
+                        totalDebit += amount;
+                    } else if (transaction.nature === 'credit') {
+                        totalCredit += amount;
+                    }
+                });
+
+                const netBalance = totalDebit - totalCredit;
+
+                totalDebitSpan.textContent = `₹${totalDebit.toFixed(2)}`;
+                totalCreditSpan.textContent = `₹${totalCredit.toFixed(2)}`;
+                netBalanceSpan.textContent = `₹${netBalance.toFixed(2)}`;
+
+                // Change the color of the net balance based on its value
+                if (netBalance > 0) {
+                    netBalanceSpan.classList.remove('text-red-400');
+                    netBalanceSpan.classList.add('text-green-400');
+                } else if (netBalance < 0) {
+                    netBalanceSpan.classList.remove('text-green-400');
+                    netBalanceSpan.classList.add('text-red-400');
+                } else {
+                    netBalanceSpan.classList.remove('text-green-400', 'text-red-400');
+                    netBalanceSpan.classList.add('text-white');
+                }
+            };
+
+            // Function to render the transaction history
+            const renderTransactions = () => {
+                const transactions = getTransactions();
+                recordsContainer.innerHTML = ''; // Clear previous records
+                
+                if (transactions.length === 0) {
+                    recordsContainer.innerHTML = '<p class="text-center text-gray-500">No transactions recorded yet.</p>';
+                    return;
+                }
+
+                // Loop through transactions and create a new element for each one
+                transactions.reverse().forEach(transaction => {
+                    const recordDiv = document.createElement('div');
+                    const natureClass = transaction.nature === 'debit' ? 'bg-green-700/30 border-green-700' : 'bg-red-700/30 border-red-700';
+                    const natureText = transaction.nature === 'debit' ? 'Debit' : 'Credit';
+                    const amountSign = transaction.nature === 'debit' ? '+' : '-';
+                    const amountColor = transaction.nature === 'debit' ? 'text-green-400' : 'text-red-400';
+
+                    recordDiv.className = `p-4 rounded-xl border ${natureClass} flex justify-between items-center`;
+                    recordDiv.innerHTML = `
+                        <div class="flex-1 flex flex-col">
+                            <span class="text-lg font-bold ${amountColor}">${amountSign}₹${parseFloat(transaction.amount).toFixed(2)}</span>
+                            <span class="text-xs text-gray-400 mt-1">${transaction.date} at ${transaction.time}</span>
+                        </div>
+                        <div class="text-sm font-semibold text-gray-300 p-2 rounded-md ${transaction.nature === 'debit' ? 'bg-green-600/50' : 'bg-red-600/50'}">
+                            ${natureText}
+                        </div>
+                    `;
+                    recordsContainer.appendChild(recordDiv);
+                });
+            };
+
+            // Initial button state and summary update on page load
+            updateSummary();
+            updateButtonState();
+
+            // Event listener for Debit button click
+            debitBtn.addEventListener('click', () => {
+                if (selectedType === 'debit') {
+                    selectedType = '';
+                } else {
+                    selectedType = 'debit';
+                }
+                updateButtonState();
+            });
+
+            // Event listener for Credit button click
+            creditBtn.addEventListener('click', () => {
+                if (selectedType === 'credit') {
+                    selectedType = '';
+                } else {
+                    selectedType = 'credit';
+                }
+                updateButtonState();
+            });
+
+            // Event listener for Record button click
+            recordBtn.addEventListener('click', () => {
+                const amount = parseFloat(amountInput.value);
+
+                if (isNaN(amount) || amount <= 0) {
+                    alert('Please enter a valid amount greater than zero.');
+                    return;
+                }
+
+                if (!selectedType) {
+                    alert('Please select either Debit or Credit.');
+                    return;
+                }
+                
+                const now = new Date();
+                const transaction = {
+                    amount: amount,
+                    nature: selectedType,
+                    date: now.toLocaleDateString(),
+                    time: now.toLocaleTimeString()
+                };
+
+                const transactions = getTransactions();
+                transactions.push(transaction);
+                saveTransactions(transactions);
+
+                // Update UI after saving
+                updateSummary();
+                amountInput.value = ''; // Clear the input field
+                selectedType = ''; // Reset selected type
+                updateButtonState(); // Update buttons to default state
+                
+                // If records are already shown, update the list
+                if (!recordsContainer.classList.contains('hidden')) {
+                    renderTransactions();
+                }
+            });
+
+            // Event listener for Show Records button click
+            showRecordsBtn.addEventListener('click', () => {
+                if (recordsContainer.classList.contains('hidden')) {
+                    recordsContainer.classList.remove('hidden');
+                    showRecordsBtn.textContent = 'Hide Transaction History';
+                    renderTransactions();
+                } else {
+                    recordsContainer.classList.add('hidden');
+                    showRecordsBtn.textContent = 'Show Transaction History';
+                }
+            });
+
+            // Settings Modal Logic
+            settingsBtn.addEventListener('click', () => {
+                settingsModal.classList.remove('hidden');
+            });
+
+            closeModalBtn.addEventListener('click', () => {
+                settingsModal.classList.add('hidden');
+            });
+
+            // Export to CSV Logic
+            exportCsvBtn.addEventListener('click', () => {
+                const transactions = getTransactions();
+                if (transactions.length === 0) {
+                    alert('No transactions to export.');
+                    return;
+                }
+
+                const csvHeader = 'Date,Time,Nature,Amount\n';
+                const csvRows = transactions.map(t => {
+                    const amount = parseFloat(t.amount).toFixed(2);
+                    return `${t.date},${t.time},${t.nature},${amount}`;
+                }).join('\n');
+                const csvContent = csvHeader + csvRows;
+
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                if (link.download !== undefined) {
+                    const url = URL.createObjectURL(blob);
+                    link.setAttribute('href', url);
+                    link.setAttribute('download', 'transactions.csv');
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                } else {
+                    alert('Your browser does not support automatic CSV download.');
+                }
+            });
+
+            // Import JSON Logic
+            importBtn.addEventListener('click', () => {
+                const importText = importInput.value;
+                if (!importText) {
+                    alert('Please paste transaction data to import.');
+                    return;
+                }
+                
+                try {
+                    const importedTransactions = JSON.parse(importText);
+                    if (!Array.isArray(importedTransactions)) {
+                        throw new Error('Invalid data format. Expected an array.');
+                    }
+                    
+                    const isValid = importedTransactions.every(t => t.amount && t.nature && t.date && t.time);
+                    if (!isValid) {
+                        throw new Error('Invalid data format. Transactions are missing required fields.');
+                    }
+
+                    saveTransactions(importedTransactions);
+                    updateSummary();
+                    alert('Transactions successfully imported!');
+                    settingsModal.classList.add('hidden');
+                    renderTransactions(); // Refresh the display
+                } catch (e) {
+                    alert('Failed to import data. Please ensure the format is correct JSON.');
+                    console.error('Import error:', e);
+                }
+            });
+
+            // Fallback for custom alerts to avoid native alert() dialog
+            function alert(message) {
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50';
+                modal.innerHTML = `
+                    <div class="bg-gray-900 text-white p-6 rounded-lg max-w-sm w-full shadow-xl text-center flex flex-col gap-4">
+                        <p>${message}</p>
+                        <button class="w-full py-2 bg-indigo-600 rounded-lg font-semibold hover:bg-indigo-700 transition-colors" onclick="this.closest('.fixed').remove()">OK</button>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+        });
+    </script>
+</body>
+</html>
